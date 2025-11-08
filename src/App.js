@@ -6,7 +6,7 @@ import Header from './components/Header';
 import BreadList from './components/BreadList';
 import OrderForm from './components/OrderForm';
 import OrderList from './components/OrderList';
-import BreadStatistics from './components/BreadStatistics'; // ✅ Добавлен импорт
+import BreadStatistics from './components/BreadStatistics';
 import './styles/App.css';
 
 function App() {
@@ -24,7 +24,9 @@ function App() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/user/current', {
+      // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${baseUrl}/api/user/current`, {
         credentials: 'include'
       });
 
@@ -42,7 +44,8 @@ function App() {
   // ✅ выход из аккаунта
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:8080/logout', {
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${baseUrl}/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -131,7 +134,7 @@ function App() {
           Оформление заказа ({orderItems.length})
         </button>
         <button
-          className={activeTab === 'statistics' ? 'active' : ''} // ✅ Новая вкладка
+          className={activeTab === 'statistics' ? 'active' : ''}
           onClick={() => setActiveTab('statistics')}
         >
           📊 Статистика
@@ -157,7 +160,7 @@ function App() {
           />
         )}
 
-        {activeTab === 'statistics' && ( // ✅ Новая вкладка
+        {activeTab === 'statistics' && (
           <BreadStatistics />
         )}
 

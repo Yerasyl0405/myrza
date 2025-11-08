@@ -12,7 +12,8 @@ const LoginPage = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // ✅ ВАЖНО: Используем FormData для Spring Security
+      // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
       const formData = new FormData();
       formData.append('username', username);
       formData.append('password', password);
@@ -20,7 +21,7 @@ const LoginPage = ({ onLoginSuccess }) => {
       console.log('Отправка запроса на логин...');
 
       // 1. Отправляем запрос на аутентификацию
-      const loginResponse = await fetch('http://localhost:8080/login', {
+      const loginResponse = await fetch(`${baseUrl}/login`, {
         method: 'POST',
         body: formData,
         credentials: 'include'
@@ -28,13 +29,12 @@ const LoginPage = ({ onLoginSuccess }) => {
 
       console.log('Статус ответа:', loginResponse.status);
 
-      // ✅ ФИКС: Сначала проверяем статус, потом читаем тело ОДИН раз
       if (loginResponse.ok) {
-        // Успешный логин
-        console.log('Успешный логин');
+        const result = await loginResponse.json();
+        console.log('Успешный логин:', result);
 
         // 2. После успешного логина получаем данные пользователя
-        const userResponse = await fetch('http://localhost:8080/api/user/current', {
+        const userResponse = await fetch(`${baseUrl}/api/user/current`, {
           credentials: 'include'
         });
 
@@ -48,20 +48,18 @@ const LoginPage = ({ onLoginSuccess }) => {
           onLoginSuccess(userData);
           toast.success('Успешный вход!');
         } else {
-          console.error('Ошибка получения пользователя:', userResponse.status);
+          const errorText = await userResponse.text();
+          console.error('Ошибка получения пользователя:', errorText);
           throw new Error('Не удалось получить данные пользователя');
         }
       } else {
-        // Ошибка логина - читаем тело ответа ОДИН раз
-        const errorText = await loginResponse.text();
-        console.error('Ошибка логина:', errorText);
-
-        // Пробуем распарсить JSON ошибки
+        // Пробуем получить JSON ошибки
         try {
-          const errorData = JSON.parse(errorText);
+          const errorData = await loginResponse.json();
           throw new Error(errorData.error || errorData.message || 'Неверные учетные данные');
-        } catch {
-          // Если не JSON, используем текст как есть
+        } catch (jsonError) {
+          // Если не JSON, то читаем как текст
+          const errorText = await loginResponse.text();
           throw new Error(errorText || `Ошибка сервера: ${loginResponse.status}`);
         }
       }
