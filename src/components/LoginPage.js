@@ -12,59 +12,50 @@ const LoginPage = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
       const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
 
-      console.log('Отправка запроса на логин...');
+      // ✅ Используем URLSearchParams вместо FormData
+      const params = new URLSearchParams();
+      params.append('username', username);
+      params.append('password', password);
 
-      // 1. Отправляем запрос на аутентификацию
+      console.log('🔹 Отправка запроса на логин...');
+
       const loginResponse = await fetch(`${baseUrl}/login`, {
         method: 'POST',
-        body: formData,
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+        credentials: 'include',
       });
 
-      console.log('Статус ответа:', loginResponse.status);
+      console.log('📡 Статус ответа:', loginResponse.status);
 
       if (loginResponse.ok) {
-        const result = await loginResponse.json();
-        console.log('Успешный логин:', result);
+        console.log('✅ Успешный логин, получаем данные пользователя...');
 
-        // 2. После успешного логина получаем данные пользователя
+        // Получаем текущего пользователя
         const userResponse = await fetch(`${baseUrl}/api/user/current`, {
-          credentials: 'include'
+          credentials: 'include',
         });
-
-        console.log('Статус получения пользователя:', userResponse.status);
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
-          console.log('Данные пользователя:', userData);
+          console.log('👤 Пользователь:', userData);
 
-          // 3. Сохраняем пользователя в состоянии
           onLoginSuccess(userData);
           toast.success('Успешный вход!');
         } else {
           const errorText = await userResponse.text();
-          console.error('Ошибка получения пользователя:', errorText);
-          throw new Error('Не удалось получить данные пользователя');
+          throw new Error(`Ошибка получения пользователя: ${errorText}`);
         }
       } else {
-        // Пробуем получить JSON ошибки
-        try {
-          const errorData = await loginResponse.json();
-          throw new Error(errorData.error || errorData.message || 'Неверные учетные данные');
-        } catch (jsonError) {
-          // Если не JSON, то читаем как текст
-          const errorText = await loginResponse.text();
-          throw new Error(errorText || `Ошибка сервера: ${loginResponse.status}`);
-        }
+        const errorData = await loginResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Неверные данные');
       }
     } catch (error) {
-      console.error('Ошибка входа:', error);
+      console.error('❌ Ошибка входа:', error);
       toast.error(error.message || 'Ошибка входа');
     } finally {
       setLoading(false);
