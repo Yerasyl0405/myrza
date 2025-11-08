@@ -14,12 +14,12 @@ const LoginPage = ({ onLoginSuccess }) => {
     try {
       const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
 
-      // ✅ Используем URLSearchParams вместо FormData
+      // URLSearchParams автоматически кодирует данные и убирает лишние кавычки
       const params = new URLSearchParams();
-      params.append('username', username);
-      params.append('password', password);
+      params.append('username', username.trim());
+      params.append('password', password.trim());
 
-      console.log('🔹 Отправка запроса на логин...');
+      console.log('🔹 Отправка запроса на логин...', { username, password });
 
       const loginResponse = await fetch(`${baseUrl}/login`, {
         method: 'POST',
@@ -35,7 +35,6 @@ const LoginPage = ({ onLoginSuccess }) => {
       if (loginResponse.ok) {
         console.log('✅ Успешный логин, получаем данные пользователя...');
 
-        // Получаем текущего пользователя
         const userResponse = await fetch(`${baseUrl}/api/user/current`, {
           credentials: 'include',
         });
