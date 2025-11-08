@@ -15,8 +15,8 @@ const LoginPage = ({ onLoginSuccess }) => {
       // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
       const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
       const formData = new FormData();
-      formData.append('username', "erasil");
-      formData.append('password', "erasil");
+      formData.append('username', username);
+      formData.append('password', password);
 
       console.log('Отправка запроса на логин...');
 
