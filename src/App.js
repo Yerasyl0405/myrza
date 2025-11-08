@@ -25,7 +25,7 @@ function App() {
   const checkAuthStatus = async () => {
     try {
       // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
       const response = await fetch(`${baseUrl}/api/user/current`, {
         credentials: 'include'
       });
@@ -44,7 +44,7 @@ function App() {
   // ✅ выход из аккаунта
   const handleLogout = async () => {
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
       const response = await fetch(`${baseUrl}/logout`, {
         method: 'POST',
         credentials: 'include'
