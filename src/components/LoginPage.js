@@ -13,7 +13,7 @@ const LoginPage = ({ onLoginSuccess }) => {
 
     try {
       // ✅ ИСПРАВЛЕННАЯ СТРОКА - правильное формирование URL
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
       const formData = new FormData();
       formData.append('username', username);
       formData.append('password', password);
