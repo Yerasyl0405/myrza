@@ -14,44 +14,62 @@ const LoginPage = ({ onLoginSuccess }) => {
     try {
       const baseUrl = process.env.REACT_APP_API_URL || 'https://back-myrza.onrender.com';
 
-      // URLSearchParams автоматически кодирует данные и убирает лишние кавычки
-      const params = new URLSearchParams();
-      params.append('username', username.trim());
-      params.append('password', password.trim());
+      // Создаем FormData для отправки
+      const formData = new URLSearchParams();
+      formData.append('username', username.trim());
+      formData.append('password', password.trim());
 
-      console.log('🔹 Отправка запроса на логин...', { username, password });
+      console.log('🔹 Отправка запроса на логин...', {
+        username: username.trim(),
+        password: password.trim(),
+        url: `${baseUrl}/login`
+      });
 
       const loginResponse = await fetch(`${baseUrl}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: params.toString(),
-        credentials: 'include',
+        body: formData.toString(),
+        credentials: 'include', // важно для сессий и куков
       });
 
       console.log('📡 Статус ответа:', loginResponse.status);
+      console.log('📡 Заголовки ответа:', loginResponse.headers);
 
       if (loginResponse.ok) {
-        console.log('✅ Успешный логин, получаем данные пользователя...');
+        const responseData = await loginResponse.text();
+        console.log('✅ Успешный логин:', responseData);
 
+        // Даем время на установку сессии
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Получаем данные пользователя
         const userResponse = await fetch(`${baseUrl}/api/user/current`, {
           credentials: 'include',
         });
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
-          console.log('👤 Пользователь:', userData);
+          console.log('👤 Данные пользователя:', userData);
 
           onLoginSuccess(userData);
           toast.success('Успешный вход!');
         } else {
           const errorText = await userResponse.text();
-          throw new Error(`Ошибка получения пользователя: ${errorText}`);
+          console.error('❌ Ошибка получения пользователя:', errorText);
+          throw new Error(`Ошибка получения данных пользователя: ${userResponse.status}`);
         }
       } else {
-        const errorData = await loginResponse.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || 'Неверные данные');
+        let errorMessage = 'Неверные учетные данные';
+        try {
+          const errorData = await loginResponse.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          const errorText = await loginResponse.text();
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('❌ Ошибка входа:', error);
@@ -74,7 +92,7 @@ const LoginPage = ({ onLoginSuccess }) => {
               onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
-              placeholder="admin или user"
+              placeholder="Введите логин"
             />
           </div>
 
@@ -86,7 +104,7 @@ const LoginPage = ({ onLoginSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              placeholder="admin или user"
+              placeholder="Введите пароль"
             />
           </div>
 
@@ -103,7 +121,7 @@ const LoginPage = ({ onLoginSuccess }) => {
           <h4>Тестовые аккаунты:</h4>
           <p><strong>👑 Admin:</strong> admin / admin</p>
           <p><strong>👤 User:</strong> user / user</p>
-          <p><em>Проверьте консоль браузера для отладки</em></p>
+          <p><strong>👥 Guest:</strong> guest1 / guest1</p>
         </div>
       </div>
     </div>
